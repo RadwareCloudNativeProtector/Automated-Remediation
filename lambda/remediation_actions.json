@@ -1,0 +1,176 @@
+{
+    "actionList" : [
+        {
+            "id": "stop_ec2_instance",
+            "name": "Stop EC2 instance",
+            "description": "Stops a running EC2 instance",
+            "requiredPermissions": ["ec2:StopInstances"],
+            "extraParamField": "",
+            "entityType": "Ec2Instance",
+            "version": 1
+        },
+        {
+            "id": "block_s3_public_access",
+            "name": "Block all public access to S3 bucket",
+            "description": "Enables the block public access settings to prevent current and future public exposures originating from the bucket policy and ACL",
+            "requiredPermissions": ["s3:PutBucketPublicAccessBlock"],
+            "extraParamField": "",
+            "entityType": "S3Bucket",
+            "version": 1
+        },
+        {
+            "id": "block_specific_s3_public_access",
+            "name": "Block specific public access to S3 bucket",
+            "description": "Removes a specific type of bucket public permissions as provided in the parameters \nYou can choose any combination of the following parameters: \nList – Removes list permissions from the bucket policy and ACL \nRead – Removes read permissions from the bucket policy \nWrite – Removes write permissions from the bucket policy and ACL \nManage – Removes manage permissions from the bucket policy and ACL",
+            "requiredPermissions": ["s3:PutBucketAcl","s3:PutBucketPolicy","s3:GetBucketAcl","s3:GetBucketPolicy","s3:DeleteBucketPolicy"],
+            "extraParamField": "permissions",
+            "entityType": "S3Bucket",
+            "version": 1
+        },
+        {
+            "id": "enable_s3_server_side_encryption",
+            "name": "Enable S3 bucket server-side encryption",
+            "description": "Enables server-side encryption (AES256) for an S3 bucket",
+            "requiredPermissions": ["s3:PutEncryptionConfiguration"],
+            "extraParamField": "",
+            "entityType": "S3Bucket",
+            "version": 1
+        },
+        {
+            "id": "remove_ingress_rule_sg",
+            "name": "Remove ingress rule from security group",
+            "description": "Removes any ingress rule from the security group that is publicly exposed to the ports provided in the parameters section \nNote that if we need to remove a port that is part of a range (for example, port 22 from range 20-25), we split the rule into two rules so that you now have ranges 20-21 and 23-25 \nYou can choose any combination of the following parameters: \nAll Ports - Removes an ingress rule that exposes all ports \nThis could be the case of a TCP/UDP protocol exposing ports 0-65535 or the specific security group settings of “All traffic” which means all ports in all of the protocols \nSSH/RDP - Removes an ingress rule that exposes ports 22 (SSH) or 3389 (RDP) \nAdministrative Ports - Removes an ingress rule that exposes the following ports: 20-21, 23, 115, 137-139, 2049, 1029, 1521, 3306, 5432, 53, 1433, 445, 9200, 27017 \nSpecific Ports - Removes an ingress rule that exposes any of the provided ports \nYou can add multiple ports or port ranges separated by a comma ",
+            "requiredPermissions": ["ec2:RevokeSecurityGroupIngress","ec2:AuthorizeSecurityGroupIngress","ec2:DescribeSecurityGroups"],
+            "extraParamField": "ports",
+            "entityType": "SecurityGroup",
+            "version": 1
+        },
+        {
+            "id": "remove_rds_redshift_port_sg",
+            "name": "Remove exposed database (RDS/Redshift) server port from security group",
+            "description": "Removes any ingress rule from the security group that publicly exposes an RDS/Redshift server listening port \nNote that if we need to remove a port that is part of a range (for example, port 3306 from range 3300-3400), we split the rule into two rules so that you now have ranges 3300-3305 and 3307-3400",
+            "requiredPermissions": ["ec2:RevokeSecurityGroupIngress","ec2:AuthorizeSecurityGroupIngress","ec2:DescribeSecurityGroups","rds:DescribeDBSecurityGroups","rds:RevokeDBSecurityGroupIngress"],
+            "extraParamField": "port",
+            "entityType": "ExposedDbSecurityGroup",
+            "version": 1
+        },
+        {
+            "id": "enable_key_rotation",
+            "name": "Enable key rotation for customer-managed key (CMK)",
+            "description": "Enables key rotation for a KMS key that is managed by a customer (CMK)",
+            "requiredPermissions": ["kms:EnableKeyRotation"],
+            "extraParamField": "",
+            "entityType": "Kms",
+            "version": 1
+        },
+        {
+            "id": "disable_console_access",
+            "name": "Disable user console access",
+            "description": "Disables a user console access by deleting it",
+            "requiredPermissions": ["iam:DeleteLoginProfile"],
+            "extraParamField": "",
+            "entityType": "AwsUser",
+            "version": 1
+        },
+        {
+            "id": "disable_inactive_access_keys",
+            "name": "Disable user inactive access key",
+            "description": "Disables a user’s inactive access key \nYou can choose any combination of the following parameters: \nAccessKey1 – Disables the first access key \nAccessKey2 – Disables the second access key",
+            "requiredPermissions": ["iam:UpdateAccessKey", "iam:ListAccessKeys"],
+            "extraParamField": "keyIndex",
+            "entityType": "AwsUser",
+            "version": 1
+        },
+        {
+            "id": "quarantine_user",
+            "name": "Quarantine IAM user",
+            "description": "Quarantines an IAM user by disabling the user’s access keys and console access login \nYou can choose any combination of the following parameters: \nDeleteConsoleAccess – Deletes the IAM user console access if it exists \nDisableAccessKeys – Disables access keys 1 and 2 if they exist",
+            "requiredPermissions": ["iam:UpdateAccessKey", "iam:DeleteLoginProfile", "iam:ListAccessKeys"],
+            "extraParamField": "actions",
+            "entityType": "AwsUser",
+            "version": 1
+        },
+        {
+            "id": "block_rds_public_access",
+            "name": "Disable RDS server publicly accessible flag",
+            "description": "Sets the RDS server publicly accessible flag to false",
+            "requiredPermissions": [ "rds:ModifyDBInstance" ],
+            "extraParamField": "",
+            "entityType": "Rds",
+            "version": 1
+        },
+        {
+            "id": "block_redshift_public_access",
+            "name": "Disable Redshift cluster publicly accessible flag",
+            "description": "Sets the Redshift cluster publicly accessible flag to false",
+            "requiredPermissions": [ "redshift:ModifyCluster" ],
+            "extraParamField": "",
+            "entityType": "Redshift",
+            "version": 1
+        },
+        {
+            "id": "remove_ami_public_exposure",
+            "name": "Remove public exposure of Amazon Machine Image (AMI)",
+            "description": "Removes the setting that exposes the Amazon Machine Image (AMI) to the public",
+            "requiredPermissions": [ "ec2:ModifyImageAttribute" ],
+            "extraParamField": "",
+            "entityType": "Ec2Image",
+            "version": 1
+        },
+        {
+            "id": "remove_rds_instance_snapshot_public_access",
+            "name": "Remove public exposure of RDS instance snapshot",
+            "description": "Removes the setting that exposes the RDS instance snapshot to the public",
+            "requiredPermissions": [ "rds:ModifyDBSnapshotAttribute" ],
+            "extraParamField": "",
+            "entityType": "RDSdbSnapshot",
+            "version": 1
+        },
+        {
+            "id": "remove_rds_cluster_snapshot_public_access",
+            "name": "Remove public exposure of RDS cluster snapshot",
+            "description": "Removes the setting that exposes the RDS cluster snapshot to the public",
+            "requiredPermissions": [ "rds:ModifyDBClusterSnapshotAttribute" ],
+            "extraParamField": "",
+            "entityType": "RDSdbClusterSnapshot",
+            "version": 1
+        },
+        {
+            "id": "restrict_all_traffic_default_sg",
+            "name": "Restrict all traffic from default security groups",
+            "description": "Removes all ingress/egress rules from the default security groups",
+            "requiredPermissions": ["ec2:RevokeSecurityGroupIngress","ec2:RevokeSecurityGroupEgress","ec2:DescribeSecurityGroups"],
+            "extraParamField": "",
+            "entityType": "SecurityGroup",
+            "version": 1
+        },
+        {
+            "id": "enable_log_validation_cloudtrail",
+            "name": "Enable CloudTrail log validation",
+            "description": "Enables log validation for a CloudTrail",
+            "requiredPermissions": ["cloudtrail:UpdateTrail"],
+            "extraParamField": "",
+            "entityType": "CloudTrail",
+            "version": 1
+        },
+        {
+            "id": "enable_multi_region_cloudtrail",
+            "name": "Enable CloudTrail multi-region logging",
+            "description": "Enables multi-region logging for a CloudTrail",
+            "requiredPermissions": ["cloudtrail:UpdateTrail"],
+            "extraParamField": "",
+            "entityType": "CloudTrail",
+            "version": 1
+        },
+        {
+            "id": "enforce_account_password_policy",
+            "name": "Enforce strong account password policy",
+            "description": "Enforces strong account password policy as defined in AWS CIS benchmark \nThe enforcement includes: \nPassword must consist of at least one number, symbol, uppercase character, and lowercase character \nPassword length of at least 14 characters \nPassword resetting every 3 months and password cannot be reused",
+            "requiredPermissions": ["iam:GetAccountPasswordPolicy","iam:UpdateAccountPasswordPolicy"],
+            "extraParamField": "attributes",
+            "entityType": "IamPasswordPolicy",
+            "version": 1
+        }
+        
+    ]
+}

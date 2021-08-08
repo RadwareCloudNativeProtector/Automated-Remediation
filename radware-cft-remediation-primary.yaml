@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  ExternalID:
+    Type: String
+    Description: The external ID provided in the CNP portal
+    AllowedPattern: '.+'
+
+Description: "Primary account setup for Radware CNP automated remediation"
+
+Resources:
+  AssumeRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: RadwareCNPCrossAccountRemediationRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Sid: RadwareCNPCrossAccountRemedy
+            Effect: Allow
+            Principal:
+              AWS: 'arn:aws:iam::438643506655:root'
+            Condition:
+              StringEquals:
+                'sts:ExternalId': !Ref ExternalID
+      Policies:
+        - PolicyName: RadwareCNPCrossAccountRemediation
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action: 
+                  - "lambda:InvokeFunction"
+                  - "lambda:InvokeAsync"
+                Resource: !GetAtt RemediationFunction.Arn
+                Effect: Allow
+              - Action: 
+                  - "iam:SimulatePrincipalPolicy"
+                Effect: Allow
+                Resource: !Join [ '' , [ 'arn:aws:iam::' , !Ref AWS::AccountId , ':role/*'] ]
+  RemediationFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: CNP-Automated-Remediation
+      Description: 'Radware CWP automated remediation Lambda which will run all the remediation actions'
+      CodeUri:
+        Bucket: !Join [ '' , [ 'cnp-automated-remediation-' , !Ref AWS::Region ] ]
+        Key: lambda.zip
+      Runtime: python3.8
+      Timeout: 120
+      Tracing: Active
+      Handler: lambda_function.lambda_handler
+      Policies:
+        - Version: '2012-10-17' # Custom Policy Document
+          Statement:
+            - Effect: Allow
+              Action:
+                  - "s3:PutBucketPublicAccessBlock"
+                  - "s3:GetBucketPolicy"
+                  - "s3:GetBucketAcl"
+                  - "s3:PutBucketPolicy"
+                  - "s3:PutBucketAcl"
+                  - "s3:DeleteBucketPolicy"
+                  - "s3:PutEncryptionConfiguration"
+                  - "ec2:StopInstances"
+                  - "ec2:RevokeSecurityGroupEgress"
+                  - "ec2:RevokeSecurityGroupIngress"
+                  - "ec2:AuthorizeSecurityGroupIngress"
+                  - "ec2:DescribeSecurityGroups"
+                  - "ec2:ModifyImageAttribute" 
+                  - "kms:EnableKeyRotation"
+                  - "iam:UpdateAccessKey"
+                  - "cloudtrail:UpdateTrail"
+                  - "iam:GetAccountPasswordPolicy"
+                  - "iam:UpdateAccountPasswordPolicy"
+                  - "iam:DeleteLoginProfile"
+                  - "iam:ListAccessKeys"
+                  - "redshift:ModifyCluster"
+                  - "rds:ModifyDBInstance"
+                  - "rds:ModifyDBSnapshotAttribute" 
+                  - "rds:ModifyDBClusterSnapshotAttribute"
+                  - "rds:DescribeDBSecurityGroups"
+                  - "rds:RevokeDBSecurityGroupIngress"
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                  - "sts:AssumeRole"
+              Resource: "arn:aws:iam::*:role/CNPAutomatedRemediationAssumeRole"
+            - Effect: Allow
+              Action:
+                  - "lambda:GetFunction"
+              Resource: !Join [ '' , [ 'arn:aws:lambda:*:' , !Ref AWS::AccountId , ':function:*'] ]
+      Environment:
+        Variables:
+          CROSS_ACCOUNT_ROLE_NAME: CNPAutomatedRemediationAssumeRole
+
+Outputs:
+  LambdaARN:
+    Description: The ARN of the Radware CWP automated Lambda which will run all the remediation actions.
+    Value: !GetAtt RemediationFunction.Arn
+  CrossAccountRoleARN:
+    Description: IAM role ARN to be assumed by CNP for remediation on this account.
+    Value: !GetAtt AssumeRole.Arn

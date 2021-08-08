@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Secondary account setup for Radware CNP automated remediation"
+Outputs:
+  AssumeRoleARN:
+    Description: IAM role ARN to be assumed by Lambda for remediation on this account.
+    Value: !GetAtt AssumeRole.Arn
+Parameters:
+  PrimaryAWSAccountID:
+    AllowedPattern: '[0-9]*'
+    MinLength: '12'
+    MaxLength: '12'
+    Type: String
+    Description: The AWS account id of the primary account where the Lambda is deployed
+Resources:
+  AssumeRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: CNPAutomatedRemediationAssumeRole
+      Policies:
+        - PolicyName: RadwareCNPCrossAccountRemediation
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - "s3:PutBucketPublicAccessBlock"
+                  - "s3:GetBucketPolicy"
+                  - "s3:GetBucketAcl"
+                  - "s3:PutBucketPolicy"
+                  - "s3:PutBucketAcl"
+                  - "s3:DeleteBucketPolicy"
+                  - "s3:PutEncryptionConfiguration"
+                  - "ec2:StopInstances"
+                  - "ec2:RevokeSecurityGroupEgress"
+                  - "ec2:RevokeSecurityGroupIngress"
+                  - "ec2:AuthorizeSecurityGroupIngress"
+                  - "ec2:DescribeSecurityGroups"
+                  - "ec2:ModifyImageAttribute" 
+                  - "kms:EnableKeyRotation"
+                  - "iam:UpdateAccessKey"
+                  - "cloudtrail:UpdateTrail"
+                  - "iam:GetAccountPasswordPolicy"
+                  - "iam:UpdateAccountPasswordPolicy"
+                  - "iam:DeleteLoginProfile"
+                  - "iam:ListAccessKeys"
+                  - "redshift:ModifyCluster"
+                  - "rds:ModifyDBInstance" 
+                  - "rds:ModifyDBSnapshotAttribute" 
+                  - "rds:ModifyDBClusterSnapshotAttribute"
+                  - "rds:DescribeDBSecurityGroups"
+                  - "rds:RevokeDBSecurityGroupIngress"
+                Resource: '*'
+                Effect: Allow
+                Sid: RadwareCNPRemedy20200623
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Sid: RadwareCNPCrossAccountRemedy
+            Effect: Allow
+            Principal:
+              AWS: !Join 
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref PrimaryAWSAccountID
+                  - ':root'
