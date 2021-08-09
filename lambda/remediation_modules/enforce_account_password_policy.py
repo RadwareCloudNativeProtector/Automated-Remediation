@@ -35,18 +35,20 @@ def remediate_action(session, event):
     except ClientError as e:
         if (e.response['Error']['Code'] == ExpectedErrorCode):
             no_current_policy = True
-            log("no password policy found")
         else:
             log(e.response['Error']['Message'], "ERROR")
-            return
+            return get_logs()
     try:
         if not dryRun:
             if no_current_policy:       
-                # enable the password policy with default values
-                log("No password policy found, enabling with default values")
-                policy_args = dict(desired_password_policy)
+                # enable the password policy with relevant values only
+                log("No password policy found, enabling password policy for the account with relevant values only")
+                policy_args = {}
+                ## handle all attributes that were passed as relevant
+                for attribute in attributes:
+                    policy_args[attribute] = desired_password_policy[attribute]
             else:
-                log("Found password policy, updating only relevant values")
+                log("Found password policy, updating relevant values only")
 
                 if('ExpirePasswords' in current_policy):
                     del current_policy['ExpirePasswords']
